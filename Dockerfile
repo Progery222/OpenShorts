@@ -29,6 +29,7 @@ WORKDIR /app
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg \
+    gosu \
     libgl1 \
     libglib2.0-0 \
     libsm6 \
@@ -48,7 +49,7 @@ RUN pip install --upgrade --no-cache-dir yt-dlp
 COPY . .
 COPY --from=frontend-build /build/dist ./dashboard/dist
 COPY docker-entrypoint.sh /docker-entrypoint.sh
-RUN chmod +x /docker-entrypoint.sh
+RUN sed -i 's/\r$//' /docker-entrypoint.sh && chmod +x /docker-entrypoint.sh
 
 RUN groupadd -r appuser && useradd -r -g appuser -d /app -s /sbin/nologin appuser
 
@@ -59,6 +60,10 @@ USER appuser
 
 RUN python -c "from ultralytics import YOLO; YOLO('yolov8n.pt')"
 
+# Runtime may mount a volume at /app/output (e.g. Railway); it is root-owned unless we chown in the entrypoint.
+USER root
+
 EXPOSE 8000
 
-ENTRYPOINT ["/docker-entrypoint.sh"]
+# Invoke via /bin/sh so CRLF in the script on Windows checkouts cannot break the kernel shebang path.
+ENTRYPOINT ["/bin/sh", "/docker-entrypoint.sh"]
