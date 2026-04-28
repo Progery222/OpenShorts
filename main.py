@@ -18,6 +18,7 @@ import mediapipe as mp
 from google import genai
 from dotenv import load_dotenv
 import json
+import httpx
 
 import warnings
 warnings.filterwarnings("ignore", category=UserWarning, module='google.protobuf')
@@ -449,6 +450,30 @@ def sanitize_filename(filename):
     return filename[:100]
 
 
+def _youtube_download_error_message(exc: BaseException) -> str:
+    """User-facing hint based on yt-dlp / YouTube error text (not always 429)."""
+    text = str(exc).lower()
+    if 'reload' in text or 'unplayable' in text:
+        return (
+            "YouTube returned a session/player error (often stale cookies or missing PO token).\n"
+            "        Try: remove or refresh cookies; open the video in a browser while logged in, then re-export cookies.\n"
+            "        Or set YOUTUBE_DISABLE_COOKIES=1 to force a no-cookie attempt for public videos."
+        )
+    if 'sign in' in text or 'login' in text or 'private video' in text:
+        return (
+            "This URL needs a logged-in session or is not publicly playable.\n"
+            "        Export fresh browser cookies (after playing the video briefly) or use a local file upload."
+        )
+    if '429' in text or 'too many requests' in text:
+        return (
+            "Rate limited (HTTP 429). Wait and retry, or use a different network / fewer parallel jobs."
+        )
+    return (
+        "YouTube blocked or could not serve formats for this request.\n"
+        "        Try again later, refresh cookies, or download manually and use Upload."
+    )
+
+
 def download_youtube_video(url, output_dir="."):
     """
     Downloads a YouTube video using yt-dlp.
@@ -473,95 +498,127 @@ def download_youtube_video(url, output_dir="."):
         except Exception as e:
             print(f"⚠️ Failed to write cookies file: {e}")
             cookies_path = None
+    elif os.path.exists(cookies_path):
+        print("🍪 Found /app/cookies.txt (will try without cookies first if enabled, then with cookies).")
     else:
         cookies_path = None
-        print("⚠️ YOUTUBE_COOKIES env var not found.")
-    
-    # Common yt-dlp options to work around YouTube bot detection.
-    # extractor_args tries multiple player clients in order; tv_embed / android
-    # avoid the OAuth/PO-token checks that block server IPs.
-    _COMMON_YDL_OPTS = {
-        'quiet': False,
-        'verbose': True,
-        'no_warnings': False,
-        'cookiefile': cookies_path if cookies_path else None,
-        'socket_timeout': 30,
-        'retries': 10,
-        'fragment_retries': 10,
-        'nocheckcertificate': True,
-        'cachedir': False,
-        'extractor_args': {
-            'youtube': {
-                'player_client': ['tv_embed', 'android', 'mweb', 'web'],
-                'player_skip': ['webpage', 'configs'],
-            }
-        },
-        'http_headers': {
-            'User-Agent': (
-                'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
-                'AppleWebKit/537.36 (KHTML, like Gecko) '
-                'Chrome/120.0.0.0 Safari/537.36'
-            ),
-        },
-    }
+        print("⚠️ YOUTUBE_COOKIES env var not found and /app/cookies.txt does not exist.")
 
-    with yt_dlp.YoutubeDL(_COMMON_YDL_OPTS) as ydl:
-        try:
-            info = ydl.extract_info(url, download=False)
-            video_title = info.get('title', 'youtube_video')
-            sanitized_title = sanitize_filename(video_title)
-        except Exception as e:
-            # Force print to stderr/stdout immediately so it's captured before crash
-            import sys
-            import traceback
-            
-            # Print minimal error first to ensure something gets out
-            print("🚨 YOUTUBE DOWNLOAD ERROR 🚨", file=sys.stderr)
-            
-            error_msg = f"""
-            
+    if os.environ.get("YOUTUBE_DISABLE_COOKIES", "").lower() in ("1", "true", "yes"):
+        print("🍪 YOUTUBE_DISABLE_COOKIES set — not using any cookie file.")
+        cookies_path = None
+
+    def _base_ydl_opts(cookiefile):
+        opts = {
+            'quiet': False,
+            'verbose': True,
+            'no_warnings': False,
+            'socket_timeout': 30,
+            'retries': 10,
+            'fragment_retries': 10,
+            'nocheckcertificate': True,
+            'cachedir': False,
+            # Use Node when present in the image (see Dockerfile) for YouTube JS challenges
+            'js_runtimes': {'node': {}},
+            'http_headers': {
+                'User-Agent': (
+                    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
+                    'AppleWebKit/537.36 (KHTML, like Gecko) '
+                    'Chrome/120.0.0.0 Safari/537.36'
+                ),
+            },
+        }
+        if cookiefile:
+            opts['cookiefile'] = cookiefile
+        return opts
+
+    # Stale cookies → LOGIN_REQUIRED / UNPLAYABLE. Try no-cookie first when a cookie file exists.
+    # Never set player_skip here (breaks n-challenge / sig / some PO flows).
+    # Extra player_client overrides are fallbacks when defaults fail inside Docker.
+    attempts = []
+    if cookies_path:
+        attempts.append((None, "without cookies (recommended first for public videos)"))
+        attempts.append((cookies_path, "with cookies (age-restricted / members-only)"))
+    else:
+        attempts.append((None, "default (no cookie file)"))
+
+    fallback_clients = [
+        None,
+        {'youtube': {'player_client': ['ios', 'android', 'web']}},
+        {'youtube': {'player_client': ['ios']}},
+    ]
+
+    info = None
+    sanitized_title = None
+    working_cookiefile = None
+    working_extractor_args = None
+    last_error = None
+
+    for cookiefile, label in attempts:
+        for fe in fallback_clients:
+            sub = "" if fe is None else " + alt player clients"
+            print(f"   ▶ YouTube: trying {label}{sub}…")
+            opts = _base_ydl_opts(cookiefile)
+            if fe:
+                opts['extractor_args'] = fe
+            try:
+                with yt_dlp.YoutubeDL(opts) as ydl:
+                    info = ydl.extract_info(url, download=False)
+                sanitized_title = sanitize_filename(info.get('title', 'youtube_video'))
+                working_cookiefile = cookiefile
+                working_extractor_args = fe
+                print(f"   ✅ Metadata OK ({label}{sub})")
+                break
+            except Exception as e:
+                last_error = e
+                print(f"   ⚠️ Failed ({label}{sub}): {e}")
+        if info is not None:
+            break
+
+    if info is None:
+        import sys
+        print("🚨 YOUTUBE DOWNLOAD ERROR 🚨", file=sys.stderr)
+        reason = _youtube_download_error_message(last_error)
+        error_msg = f"""
+
 ❌ ================================================================= ❌
 ❌ FATAL ERROR: YOUTUBE DOWNLOAD FAILED
 ❌ ================================================================= ❌
-            
-REASON: YouTube has blocked the download request (Error 429/Unavailable).
-        This is likely a temporary IP ban on this server.
+
+REASON: {reason}
 
 👇 SOLUTION FOR USER 👇
 ---------------------------------------------------------------------
-1. Download the video manually to your computer.
-2. Use the 'Upload Video' tab in this app to process it.
+1. For public videos: remove or rename /app/cookies.txt, or set YOUTUBE_DISABLE_COOKIES=1, then retry.
+2. If you need login: export fresh cookies after playing the video in the browser for a few seconds.
+3. Or download the file manually and use the 'Upload Video' tab.
 ---------------------------------------------------------------------
 
-Technical Details: {str(e)}
-            """
-            # Print to both streams to ensure capture
-            print(error_msg, file=sys.stdout)
-            print(error_msg, file=sys.stderr)
-            
-            # Force flush
-            sys.stdout.flush()
-            sys.stderr.flush()
-            
-            # Wait a split second to allow buffer to drain before raising
-            time.sleep(0.5)
-            
-            raise e
-    
+Technical Details: {last_error}
+"""
+        print(error_msg, file=sys.stdout)
+        print(error_msg, file=sys.stderr)
+        sys.stdout.flush()
+        sys.stderr.flush()
+        time.sleep(0.5)
+        raise last_error
+
     output_template = os.path.join(output_dir, f'{sanitized_title}.%(ext)s')
     expected_file = os.path.join(output_dir, f'{sanitized_title}.mp4')
     if os.path.exists(expected_file):
         os.remove(expected_file)
         print(f"🗑️  Removed existing file to re-download with H.264 codec")
-    
+
     ydl_opts = {
-        **_COMMON_YDL_OPTS,
+        **_base_ydl_opts(working_cookiefile),
         'format': 'bestvideo[vcodec^=avc1][ext=mp4]+bestaudio[ext=m4a]/bestvideo[vcodec^=avc1]+bestaudio/best[ext=mp4]/best',
         'outtmpl': output_template,
         'merge_output_format': 'mp4',
         'overwrites': True,
     }
-    
+    if working_extractor_args:
+        ydl_opts['extractor_args'] = working_extractor_args
+
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         ydl.download([url])
     
@@ -794,97 +851,225 @@ def transcribe_video(video_path):
         'language': info.language
     }
 
-def get_viral_clips(transcript_result, video_duration):
-    print("🤖  Analyzing with Gemini...")
-    
-    api_key = os.getenv("GEMINI_API_KEY")
-    if not api_key:
-        print("❌ Error: GEMINI_API_KEY not found in environment variables.")
+def _is_transient_network_err(exc: BaseException) -> bool:
+    msg = str(exc).lower()
+    if 'name resolution' in msg or 'temporary failure' in msg:
+        return True
+    if 'connection reset' in msg or 'connection refused' in msg:
+        return True
+    if 'timeout' in msg or 'timed out' in msg:
+        return True
+    if '429' in msg or 'rate limit' in msg:
+        return True
+    e = exc
+    for _ in range(4):
+        if e is None:
+            break
+        if isinstance(e, OSError) and e.errno in (-3, 11):
+            return True
+        e = getattr(e, '__cause__', None) or getattr(e, '__context__', None)
+    return False
+
+
+def _parse_clips_json_from_llm_text(text: str):
+    """Normalize markdown fences and parse; require a non-empty shorts list."""
+    if not text or not str(text).strip():
+        return None
+    t = str(text).strip()
+    if t.startswith("```json"):
+        t = t[7:]
+    elif t.startswith("```"):
+        t = t[3:]
+    if t.endswith("```"):
+        t = t[:-3]
+    t = t.strip()
+    try:
+        data = json.loads(t)
+    except json.JSONDecodeError:
+        return None
+    if not isinstance(data, dict) or "shorts" not in data:
+        return None
+    if not isinstance(data["shorts"], list) or len(data["shorts"]) < 1:
+        return None
+    return data
+
+
+def _gemini_viral_clips(prompt: str, api_key: str):
+    model_name = "gemini-2.5-flash"
+    print(f"🤖  Gemini ({model_name})…")
+    client = genai.Client(api_key=api_key)
+    response = None
+    last_err = None
+    for attempt in range(3):
+        try:
+            response = client.models.generate_content(
+                model=model_name,
+                contents=prompt,
+            )
+            last_err = None
+            break
+        except Exception as e:
+            last_err = e
+            if _is_transient_network_err(e) and attempt < 2:
+                wait_s = 2 ** attempt
+                print(f"⚠️  Gemini request failed ({e}), retrying in {wait_s}s…")
+                time.sleep(wait_s)
+                continue
+            print(f"❌ Gemini Error: {e}")
+            return None
+
+    if response is None:
+        if last_err:
+            print(f"❌ Gemini Error: {last_err}")
         return None
 
-
-    client = genai.Client(api_key=api_key)
-    
-    # We use gemini-2.5-flash as requested.
-    model_name = 'gemini-2.5-flash' 
-    
-    print(f"🤖  Initializing Gemini with model: {model_name}")
-
-    # Extract words
-    words = []
-    for segment in transcript_result['segments']:
-        for word in segment.get('words', []):
-            words.append({
-                'w': word['word'],
-                's': word['start'],
-                'e': word['end']
-            })
-
-    prompt = GEMINI_PROMPT_TEMPLATE.format(
-        video_duration=video_duration,
-        transcript_text=json.dumps(transcript_result['text']),
-        words_json=json.dumps(words)
-    )
-
+    cost_analysis = None
     try:
-        response = client.models.generate_content(
-            model=model_name,
-            contents=prompt
-        )
-        
-        # --- Cost Calculation ---
         try:
             usage = response.usage_metadata
             if usage:
-                # Gemini 2.5 Flash Pricing (Dec 2025)
-                # Input: $0.10 per 1M tokens
-                # Output: $0.40 per 1M tokens
-                
                 input_price_per_million = 0.10
                 output_price_per_million = 0.40
-                
                 prompt_tokens = usage.prompt_token_count
                 output_tokens = usage.candidates_token_count
-                
                 input_cost = (prompt_tokens / 1_000_000) * input_price_per_million
                 output_cost = (output_tokens / 1_000_000) * output_price_per_million
                 total_cost = input_cost + output_cost
-                
                 cost_analysis = {
                     "input_tokens": prompt_tokens,
                     "output_tokens": output_tokens,
                     "input_cost": input_cost,
                     "output_cost": output_cost,
                     "total_cost": total_cost,
-                    "model": model_name
+                    "model": model_name,
                 }
-
                 print(f"💰 Token Usage ({model_name}):")
                 print(f"   - Input Tokens: {prompt_tokens} (${input_cost:.6f})")
                 print(f"   - Output Tokens: {output_tokens} (${output_cost:.6f})")
                 print(f"   - Total Estimated Cost: ${total_cost:.6f}")
-                
         except Exception as e:
             print(f"⚠️ Could not calculate cost: {e}")
             cost_analysis = None
-        # ------------------------
 
-        # Clean response if it contains markdown code blocks
-        text = response.text
-        if text.startswith("```json"):
-            text = text[7:]
-        if text.endswith("```"):
-            text = text[:-3]
-        text = text.strip()
-        
-        result_json = json.loads(text)
+        result_json = _parse_clips_json_from_llm_text(response.text)
+        if result_json is None:
+            print("❌ Gemini returned text that is not valid clips JSON.")
+            return None
         if cost_analysis:
-            result_json['cost_analysis'] = cost_analysis
-            
+            result_json["cost_analysis"] = cost_analysis
         return result_json
     except Exception as e:
         print(f"❌ Gemini Error: {e}")
         return None
+
+
+def _openai_viral_clips(prompt: str, api_key: str):
+    model = os.getenv("OPENAI_CLIP_MODEL", "gpt-4o-mini")
+    print(f"🔄  OpenAI fallback ({model})…")
+    sys_msg = (
+        "You are a short-form video editor. Follow the user instructions exactly. "
+        "Reply with a single JSON object only (no markdown), matching the schema they specify."
+    )
+    payload = {
+        "model": model,
+        "temperature": 0.35,
+        "response_format": {"type": "json_object"},
+        "messages": [
+            {"role": "system", "content": sys_msg},
+            {"role": "user", "content": prompt},
+        ],
+    }
+    last_err = None
+    for attempt in range(3):
+        try:
+            with httpx.Client(timeout=180.0) as h:
+                r = h.post(
+                    "https://api.openai.com/v1/chat/completions",
+                    headers={
+                        "Authorization": f"Bearer {api_key}",
+                        "Content-Type": "application/json",
+                    },
+                    json=payload,
+                )
+            if r.status_code >= 400:
+                last_err = RuntimeError(r.text[:500] if r.text else r.status_code)
+                if _is_transient_network_err(last_err) and attempt < 2:
+                    time.sleep(2 ** attempt)
+                    continue
+                print(f"❌ OpenAI HTTP {r.status_code}: {r.text[:300]}")
+                return None
+            data = r.json()
+            content = (
+                (data.get("choices") or [{}])[0]
+                .get("message", {})
+                .get("content", "")
+            )
+            result_json = _parse_clips_json_from_llm_text(content)
+            if result_json is None:
+                print("❌ OpenAI returned JSON without a usable shorts list.")
+                return None
+            usage = data.get("usage") or {}
+            pt = usage.get("prompt_tokens") or 0
+            ct = usage.get("completion_tokens") or 0
+            result_json["cost_analysis"] = {
+                "input_tokens": pt,
+                "output_tokens": ct,
+                "input_cost": None,
+                "output_cost": None,
+                "total_cost": None,
+                "model": model,
+                "provider": "openai",
+            }
+            print(f"💰 OpenAI usage: {pt} prompt + {ct} completion tokens")
+            return result_json
+        except Exception as e:
+            last_err = e
+            if _is_transient_network_err(e) and attempt < 2:
+                wait_s = 2 ** attempt
+                print(f"⚠️  OpenAI request failed ({e}), retrying in {wait_s}s…")
+                time.sleep(wait_s)
+                continue
+            print(f"❌ OpenAI Error: {e}")
+            return None
+
+    if last_err:
+        print(f"❌ OpenAI Error: {last_err}")
+    return None
+
+
+def get_viral_clips(transcript_result, video_duration):
+    print("🤖  Viral clip analysis (Gemini → OpenAI if needed)…")
+
+    words = []
+    for segment in transcript_result["segments"]:
+        for word in segment.get("words", []):
+            words.append(
+                {
+                    "w": word["word"],
+                    "s": word["start"],
+                    "e": word["end"],
+                }
+            )
+
+    prompt = GEMINI_PROMPT_TEMPLATE.format(
+        video_duration=video_duration,
+        transcript_text=json.dumps(transcript_result["text"]),
+        words_json=json.dumps(words),
+    )
+
+    gemini_key = os.getenv("GEMINI_API_KEY")
+    if gemini_key:
+        out = _gemini_viral_clips(prompt, gemini_key)
+        if out is not None:
+            return out
+        print("⚠️  Switching to OpenAI after Gemini failure or bad response.")
+
+    openai_key = os.getenv("OPENAI_API_KEY")
+    if openai_key:
+        return _openai_viral_clips(prompt, openai_key)
+
+    print("❌ No OPENAI_API_KEY and Gemini did not succeed (or GEMINI_API_KEY missing).")
+    return None
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="AutoCrop-Vertical with Viral Clip Detection.")
@@ -954,9 +1139,9 @@ if __name__ == '__main__':
         
         # Get duration
         cap = cv2.VideoCapture(input_video)
-        fps = cap.get(cv2.CAP_PROP_FPS)
+        fps = cap.get(cv2.CAP_PROP_FPS) or 0.0
         frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-        duration = frame_count / fps
+        duration = (frame_count / fps) if fps > 0 else 0.0
         cap.release()
 
         # 4. Gemini Analysis
@@ -964,8 +1149,23 @@ if __name__ == '__main__':
         
         if not clips_data or 'shorts' not in clips_data:
             print("❌ Failed to identify clips. Converting whole video as fallback.")
-            output_file = os.path.join(output_dir, f"{video_title}_vertical.mp4")
-            process_video_to_vertical(input_video, output_file)
+            # Match API contract: *_clip_1.mp4 + *_metadata.json (see app.py job watcher)
+            clip_final_path = os.path.join(output_dir, f"{video_title}_clip_1.mp4")
+            process_video_to_vertical(input_video, clip_final_path)
+            end_s = float(duration) if duration and duration > 0 else 0.0
+            fallback_meta = {
+                "shorts": [{
+                    "start": 0.0,
+                    "end": end_s,
+                    "video_title_for_youtube_short": (video_title or "Full video")[:100],
+                }],
+                "transcript": transcript,
+                "fallback_full_video": True,
+            }
+            metadata_file = os.path.join(output_dir, f"{video_title}_metadata.json")
+            with open(metadata_file, 'w') as f:
+                json.dump(fallback_meta, f, indent=2)
+            print(f"   Saved fallback metadata to {metadata_file}")
         else:
             print(f"🔥 Found {len(clips_data['shorts'])} viral clips!")
             

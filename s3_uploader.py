@@ -21,7 +21,7 @@ def upload_file_to_s3(file_path, bucket_name, s3_key):
     secret_key = os.environ.get('AWS_SECRET_ACCESS_KEY')
     region = os.environ.get('AWS_REGION', 'eu-west-3')
 
-    if not access_key or not secret_key:
+    if not access_key or not secret_key or _is_placeholder(access_key) or _is_placeholder(secret_key):
         return False
 
     s3_client = boto3.client(
@@ -52,13 +52,21 @@ _clips_cache = {
 }
 CACHE_TTL_SECONDS = 300  # 5 minutes
 
+def _is_placeholder(value):
+    """Detect common placeholder/default values that are not real credentials."""
+    if not value:
+        return True
+    lowered = value.lower()
+    placeholders = ['your_', 'example', 'placeholder', 'dummy', 'test', 'fake', 'xxxxxxxx', 'aaaaaa', 'key_here', 'secret_here']
+    return any(p in lowered for p in placeholders)
+
 def get_s3_client():
     """Returns an authenticated S3 client."""
     access_key = os.environ.get('AWS_ACCESS_KEY_ID')
     secret_key = os.environ.get('AWS_SECRET_ACCESS_KEY')
     region = os.environ.get('AWS_REGION', 'eu-west-3')
 
-    if not access_key or not secret_key:
+    if not access_key or not secret_key or _is_placeholder(access_key) or _is_placeholder(secret_key):
         return None
 
     return boto3.client(

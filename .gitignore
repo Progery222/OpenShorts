@@ -19,6 +19,9 @@ downloads/
 videos/
 output/
 
+# Local mistaken symlink (breaks Docker context on Windows)
+/node
+
 # OS / IDE
 .DS_Store
 .idea/
@@ -26,6 +29,7 @@ output/
 
 # Secrets
 .env
+cookies.txt
 
 # Generated metadata
 *_metadata.json

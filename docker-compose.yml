@@ -2,8 +2,15 @@ services:
   backend:
     build: .
     container_name: openshorts-backend
+    env_file:
+      - .env
+    # Mitigate "Temporary failure in name resolution" inside Docker Desktop / WSL2
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+      - 1.1.1.1
     ports:
-      - "8000:8000"
+      - "8001:8000"
     volumes:
       - .:/app
       - /app/__pycache__
@@ -14,7 +21,7 @@ services:
     build: ./dashboard
     container_name: openshorts-frontend
     ports:
-      - "5175:5173"
+      - "5176:5173"
     volumes:
       - ./dashboard:/app
       - /app/node_modules
@@ -28,7 +35,7 @@ services:
       dockerfile: render-service/Dockerfile
     container_name: openshorts-renderer
     ports:
-      - "3100:3100"
+      - "3101:3100"
     volumes:
       - ./output:/output
     environment:

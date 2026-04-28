@@ -30,7 +30,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libxext6 \
     libxrender1 \
     nodejs \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && if command -v node >/dev/null 2>&1; then true; else ln -sf "$(command -v nodejs)" /usr/local/bin/node; fi \
+    && node --version
 
 # Copy virtual env from builder
 COPY --from=builder /opt/venv /opt/venv

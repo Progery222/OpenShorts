@@ -2,6 +2,10 @@
 .git
 .gitignore
 
+# Local ML / HF caches (break Docker context on Windows; huge; not needed in image)
+.cache/
+.config/
+
 # Python
 __pycache__
 *.py[cod]
@@ -16,6 +20,8 @@ ENV/
 .pytest_cache/
 
 # Node
+# Root-level `node` symlink/junction breaks Docker BuildKit context on Windows ("invalid file request node")
+/node
 node_modules/
 remotion/node_modules/
 render-service/node_modules/
