@@ -1,0 +1,18 @@
+# Same as requirements.txt but torch/torchvision installed separately in Dockerfile
+# (CPU wheels from download.pytorch.org) to avoid CUDA packages on Railway.
+scenedetect
+ultralytics
+tqdm
+yt-dlp
+faster-whisper
+google-genai
+python-dotenv
+mediapipe==0.10.14
+boto3
+
+fastapi
+uvicorn
+python-multipart
+httpx
+Pillow
+beautifulsoup4

@@ -13,7 +13,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Request, Header, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, FileResponse
 from pydantic import BaseModel
 from s3_uploader import upload_job_artifacts, list_all_clips, upload_actor_to_s3, list_actor_gallery, upload_video_to_gallery, list_video_gallery
 
@@ -176,6 +176,13 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.get("/health")
+async def health():
+    """Lightweight liveness probe (Railway, k8s, etc.)."""
+    return {"status": "ok"}
+
 
 # Mount static files for serving videos
 app.mount("/videos", StaticFiles(directory=OUTPUT_DIR), name="videos")
@@ -2222,3 +2229,30 @@ async def saasshorts_voices(
         ],
         "source": "defaults",
     }
+
+
+# --- Production SPA (Vite build in dashboard/dist). Variant A: /assets mount + GET catch-all ---
+_DASHBOARD_DIST = os.path.join(os.path.dirname(os.path.abspath(__file__)), "dashboard", "dist")
+
+if os.path.isdir(_DASHBOARD_DIST):
+    _spa_assets = os.path.join(_DASHBOARD_DIST, "assets")
+    if os.path.isdir(_spa_assets):
+        app.mount("/assets", StaticFiles(directory=_spa_assets), name="spa_assets")
+
+    _index_file = os.path.join(_DASHBOARD_DIST, "index.html")
+
+    @app.get("/")
+    async def spa_root():
+        if os.path.isfile(_index_file):
+            return FileResponse(_index_file)
+        raise HTTPException(status_code=404, detail="SPA index missing")
+
+    @app.get("/{full_path:path}")
+    async def spa_static_or_index(full_path: str):
+        if not os.path.isfile(_index_file):
+            raise HTTPException(status_code=404, detail="SPA not built")
+        base = os.path.realpath(_DASHBOARD_DIST)
+        candidate = os.path.realpath(os.path.join(_DASHBOARD_DIST, full_path))
+        if candidate.startswith(base) and os.path.isfile(candidate):
+            return FileResponse(candidate)
+        return FileResponse(_index_file)
