@@ -65,18 +65,11 @@ export default function ResultCard({ clip, index, jobId, uploadPostKey, uploadUs
         setIsEditing(true);
         setEditError(null);
         try {
-            const apiKey = geminiApiKey || localStorage.getItem('gemini_key');
-
-            if (!apiKey) {
-                throw new Error("Gemini API Key is missing. Please set it in Settings.");
-            }
-
             // Try Remotion effects endpoint first
             const effectsRes = await fetch(getApiUrl('/api/effects/generate'), {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-Gemini-Key': apiKey
                 },
                 body: JSON.stringify({
                     job_id: jobId,
@@ -99,7 +92,6 @@ export default function ResultCard({ clip, index, jobId, uploadPostKey, uploadUs
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-Gemini-Key': apiKey
                 },
                 body: JSON.stringify({
                     job_id: jobId,

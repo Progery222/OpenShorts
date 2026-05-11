@@ -165,7 +165,7 @@ export default function ThumbnailStudio({ geminiApiKey, uploadPostKey, uploadUse
 
   // --- Step 1: Analyze Video ---
   const handleAnalyze = async () => {
-    if (!geminiApiKey) return alert('Please set your Gemini API key in Settings first.');
+
     setIsAnalyzing(true);
 
     try {
@@ -182,7 +182,7 @@ export default function ThumbnailStudio({ geminiApiKey, uploadPostKey, uploadUse
 
       const res = await fetch(getApiUrl('/api/thumbnail/analyze'), {
         method: 'POST',
-        headers: { 'X-Gemini-Key': geminiApiKey },
+        headers: {},
         body: formData
       });
 
@@ -227,7 +227,7 @@ export default function ThumbnailStudio({ geminiApiKey, uploadPostKey, uploadUse
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-Gemini-Key': geminiApiKey
+
         },
         body: JSON.stringify({ title: manualTitle, session_id: newSessionId })
       }).catch(() => { });
@@ -250,7 +250,7 @@ export default function ThumbnailStudio({ geminiApiKey, uploadPostKey, uploadUse
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-Gemini-Key': geminiApiKey
+
         },
         body: JSON.stringify({ session_id: sessionId, message: userMsg })
       });
@@ -275,7 +275,7 @@ export default function ThumbnailStudio({ geminiApiKey, uploadPostKey, uploadUse
 
   // --- Step 3: Generate Thumbnails ---
   const handleGenerate = async () => {
-    if (!geminiApiKey) return alert('Please set your Gemini API key in Settings first.');
+
     const finalTitle = selectedTitle || manualTitle;
     if (!finalTitle) return alert('Please select or enter a title first.');
 
@@ -293,7 +293,7 @@ export default function ThumbnailStudio({ geminiApiKey, uploadPostKey, uploadUse
 
       const res = await fetch(getApiUrl('/api/thumbnail/generate'), {
         method: 'POST',
-        headers: { 'X-Gemini-Key': geminiApiKey },
+        headers: {},
         body: formData
       });
 
@@ -334,7 +334,7 @@ export default function ThumbnailStudio({ geminiApiKey, uploadPostKey, uploadUse
 
   // --- Description Generation ---
   const handleGenerateDescription = async () => {
-    if (!geminiApiKey) return alert('Please set your Gemini API key in Settings first.');
+
     const finalTitle = selectedTitle || manualTitle;
     if (!finalTitle) return alert('Please select a title first.');
     if (!sessionId) return alert('No session available.');
@@ -345,7 +345,7 @@ export default function ThumbnailStudio({ geminiApiKey, uploadPostKey, uploadUse
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-Gemini-Key': geminiApiKey
+
         },
         body: JSON.stringify({ session_id: sessionId, title: finalTitle })
       });
@@ -472,20 +472,9 @@ export default function ThumbnailStudio({ geminiApiKey, uploadPostKey, uploadUse
 
         <StepIndicator currentStep={step} />
 
-        {/* Gemini API Key Warning */}
-        {!geminiApiKey && (
-          <div className="mb-6 p-5 bg-amber-500/10 border border-amber-500/30 rounded-xl flex items-start gap-3">
-            <AlertCircle size={20} className="text-amber-400 shrink-0 mt-0.5" />
-            <div>
-              <p className="text-sm font-semibold text-amber-300">Gemini API Key Required</p>
-              <p className="text-xs text-amber-400/70 mt-1">YouTube Studio requires a Google Gemini API key to function. Please configure it in the <strong>Settings</strong> tab before using this feature. Gemini's free tier includes 1,500 requests per day.</p>
-            </div>
-          </div>
-        )}
-
         {/* ===== STEP 0: Input Mode Selection ===== */}
         {step === 0 && (
-          <div className={`grid md:grid-cols-2 gap-6 ${!geminiApiKey ? 'opacity-50 pointer-events-none select-none' : ''}`}>
+          <div className="grid md:grid-cols-2 gap-6">
             {/* Mode A: Video Analysis */}
             <div className="glass-panel p-6 space-y-4">
               <div className="flex items-center gap-3 mb-2">

@@ -348,9 +348,9 @@ async def process_endpoint(
     file: Optional[UploadFile] = File(None),
     url: Optional[str] = Form(None)
 ):
-    api_key = request.headers.get("X-Gemini-Key")
+    api_key = request.headers.get("X-Gemini-Key") or os.environ.get("GEMINI_API_KEY")
     if not api_key:
-        raise HTTPException(status_code=400, detail="Missing X-Gemini-Key header")
+        raise HTTPException(status_code=400, detail="Missing Gemini API key. Set GEMINI_API_KEY environment variable or provide X-Gemini-Key header.")
     
     # Handle JSON body manually for URL payload
     content_type = request.headers.get("content-type", "")
@@ -414,9 +414,9 @@ async def promo_endpoint(
     x_gemini_key: Optional[str] = Header(None, alias="X-Gemini-Key"),
 ):
     """Generate a promo reel from a local video: horizontal cuts stitched into one file."""
-    api_key = x_gemini_key or request.headers.get("X-Gemini-Key")
+    api_key = x_gemini_key or request.headers.get("X-Gemini-Key") or os.environ.get("GEMINI_API_KEY")
     if not api_key:
-        raise HTTPException(status_code=400, detail="Missing X-Gemini-Key header")
+        raise HTTPException(status_code=400, detail="Missing Gemini API key. Set GEMINI_API_KEY environment variable or provide X-Gemini-Key header.")
 
     job_id = str(uuid.uuid4())
     job_output_dir = os.path.join(OUTPUT_DIR, job_id)
@@ -1332,9 +1332,9 @@ async def thumbnail_analyze(
     x_gemini_key: Optional[str] = Header(None, alias="X-Gemini-Key")
 ):
     """Analyze a video and suggest viral YouTube titles."""
-    api_key = x_gemini_key
+    api_key = x_gemini_key or os.environ.get("GEMINI_API_KEY")
     if not api_key:
-        raise HTTPException(status_code=400, detail="Missing X-Gemini-Key header")
+        raise HTTPException(status_code=400, detail="Missing Gemini API key. Set GEMINI_API_KEY environment variable or provide X-Gemini-Key header.")
 
     pre_transcript = None
 
@@ -1416,9 +1416,9 @@ async def thumbnail_titles(
     x_gemini_key: Optional[str] = Header(None, alias="X-Gemini-Key")
 ):
     """Refine title suggestions or accept a manual title."""
-    api_key = x_gemini_key
+    api_key = x_gemini_key or os.environ.get("GEMINI_API_KEY")
     if not api_key:
-        raise HTTPException(status_code=400, detail="Missing X-Gemini-Key header")
+        raise HTTPException(status_code=400, detail="Missing Gemini API key. Set GEMINI_API_KEY environment variable or provide X-Gemini-Key header.")
 
     # Manual title mode - just create a session with the user's title
     if req.title:
@@ -1478,9 +1478,9 @@ async def thumbnail_generate(
     x_gemini_key: Optional[str] = Header(None, alias="X-Gemini-Key")
 ):
     """Generate YouTube thumbnails with Gemini image generation."""
-    api_key = x_gemini_key
+    api_key = x_gemini_key or os.environ.get("GEMINI_API_KEY")
     if not api_key:
-        raise HTTPException(status_code=400, detail="Missing X-Gemini-Key header")
+        raise HTTPException(status_code=400, detail="Missing Gemini API key. Set GEMINI_API_KEY environment variable or provide X-Gemini-Key header.")
 
     # Clamp count
     count = min(max(1, count), 6)
@@ -1544,9 +1544,9 @@ async def thumbnail_describe(
     x_gemini_key: Optional[str] = Header(None, alias="X-Gemini-Key")
 ):
     """Generate a YouTube description with chapters from the transcript."""
-    api_key = x_gemini_key
+    api_key = x_gemini_key or os.environ.get("GEMINI_API_KEY")
     if not api_key:
-        raise HTTPException(status_code=400, detail="Missing X-Gemini-Key header")
+        raise HTTPException(status_code=400, detail="Missing Gemini API key. Set GEMINI_API_KEY environment variable or provide X-Gemini-Key header.")
 
     if req.session_id not in thumbnail_sessions:
         raise HTTPException(status_code=404, detail="Session not found")

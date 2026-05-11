@@ -186,11 +186,6 @@ export default function SaaShortsTab({ geminiApiKey, elevenLabsKey, falKey, uplo
 
   const handleAnalyze = async () => {
     if (!url.trim() && !description.trim()) return;
-    if (!geminiApiKey) {
-      setAnalyzeError('Gemini API key required. Set it in Settings.');
-      return;
-    }
-
     setAnalyzing(true);
     setAnalyzeError('');
 
@@ -199,7 +194,6 @@ export default function SaaShortsTab({ geminiApiKey, elevenLabsKey, falKey, uplo
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-Gemini-Key': geminiApiKey,
         },
         body: JSON.stringify({
           url: url.trim() || undefined,
