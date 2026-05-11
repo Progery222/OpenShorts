@@ -132,7 +132,7 @@ export default function Landing({ onLaunchApp }) {
   const faqs = [
     {
       question: "What is Atom ShortsCut and how does it work?",
-      answer: "Atom ShortsCut is an AI clip generator that transforms long YouTube videos or local uploads into viral-ready short clips in 9:16 vertical format. It uses a multi-step AI pipeline: faster-whisper for transcription with word-level timestamps, PySceneDetect for scene boundary detection, and Google Gemini 3.0 Flash AI for identifying the most engaging viral moments."}
+      answer: "Atom ShortsCut is an AI clip generator that transforms long YouTube videos or local uploads into viral-ready short clips in 9:16 vertical format. It uses a multi-step AI pipeline: faster-whisper for transcription with word-level timestamps, PySceneDetect for scene boundary detection, and Google Gemini 3.0 Flash AI for identifying the most engaging viral moments."
     },
     {
       question: "How much does Atom ShortsCut cost?",
@@ -140,7 +140,7 @@ export default function Landing({ onLaunchApp }) {
     },
     {
       question: "How does Atom ShortsCut compare to Opus Clip?",
-      answer: "Both offer AI viral moment detection and smart vertical cropping. Atom ShortsCut runs on your infrastructure for full data privacy, uses Google Gemini 3.0 Flash for AI analysis, and adds AI voice dubbing in 30+ languages, AI-generated video effects, and hook text overlays. The trade-off is that Atom ShortsCut requires Docker self-hosting, while Opus Clip is a ready-to-use cloud service."}
+      answer: "Both offer AI viral moment detection and smart vertical cropping. Atom ShortsCut runs on your infrastructure for full data privacy, uses Google Gemini 3.0 Flash for AI analysis, and adds AI voice dubbing in 30+ languages, AI-generated video effects, and hook text overlays. The trade-off is that Atom ShortsCut requires Docker self-hosting, while Opus Clip is a ready-to-use cloud service."
     },
     {
       question: "How do I convert a YouTube video to TikTok or Reels?",
@@ -164,7 +164,7 @@ export default function Landing({ onLaunchApp }) {
     },
     {
       question: "What are the system requirements to run Atom ShortsCut?",
-      answer: "Atom ShortsCut runs on any system with Docker installed. The recommended setup is 8GB+ RAM and a modern multi-core CPU. GPU acceleration (NVIDIA CUDA) is optional but speeds up video processing significantly. The Docker Compose setup handles all dependencies automatically. It works on Linux, macOS, and Windows (via WSL2/Docker Desktop)."}
+      answer: "Atom ShortsCut runs on any system with Docker installed. The recommended setup is 8GB+ RAM and a modern multi-core CPU. GPU acceleration (NVIDIA CUDA) is optional but speeds up video processing significantly. The Docker Compose setup handles all dependencies automatically. It works on Linux, macOS, and Windows (via WSL2/Docker Desktop)."
     },
     {
       question: "Can I generate unlimited clips?",
@@ -176,7 +176,7 @@ export default function Landing({ onLaunchApp }) {
     },
     {
       question: "How much does it cost to generate an AI UGC video?",
-      answer: "The AI Shorts feature uses external APIs (fal.ai for video generation, ElevenLabs for voiceover) that charge per use. Low Cost mode costs approximately $0.65 per video. Premium mode costs approximately $2.00 per video using Kling Avatar v2 for higher quality. Both modes are significantly cheaper than hiring UGC creators ($50-500 per video) or using platforms like HeyGen ($24-180/month)."}
+      answer: "The AI Shorts feature uses external APIs (fal.ai for video generation, ElevenLabs for voiceover) that charge per use. Low Cost mode costs approximately $0.65 per video. Premium mode costs approximately $2.00 per video using Kling Avatar v2 for higher quality. Both modes are significantly cheaper than hiring UGC creators ($50-500 per video) or using platforms like HeyGen ($24-180/month)."
     },
     {
       question: "Can I use the AI UGC Video Generator for any type of business?",
