@@ -122,61 +122,61 @@ export default function Landing({ onLaunchApp }) {
   ];
 
   const steps = [
-    { title: "Paste a YouTube URL or Upload a Video", description: "Drop any YouTube link or upload a local video file. OpenShorts supports all common formats and resolutions." },
+    { title: "Paste a YouTube URL or Upload a Video", description: "Drop any YouTube link or upload a local video file. Supports all common formats and resolutions." },
     { title: "AI Detects the Best Viral Moments", description: "Google Gemini 3.0 Flash transcribes, analyzes scene boundaries, and identifies 3-15 high-potential clips of 15-60 seconds each." },
     { title: "Smart Cropping to Vertical 9:16", description: "AI reframes each clip to vertical format with face tracking. Subjects stay centered with stabilized camera movement — no manual positioning." },
     { title: "Add Subtitles, Hooks & Effects", description: "Auto-generate styled subtitles, add hook text overlays, and apply AI video effects. Optionally dub into 30+ languages." },
-    { title: "Download or Post to Social Media", description: "Export your viral-ready clips or post directly to TikTok, Instagram Reels, and YouTube Shorts from the dashboard." }
+    { title: "Download or Post to Social Media", description: "Export your viral-ready clips or post directly to TikTok, Instagram Reels, and YouTube Shorts." }
   ];
 
   const faqs = [
     {
-      question: "What is OpenShorts and how does it work?",
-      answer: "OpenShorts is a free, open source AI clip generator that transforms long YouTube videos or local uploads into viral-ready short clips in 9:16 vertical format. It uses a multi-step AI pipeline: faster-whisper for transcription with word-level timestamps, PySceneDetect for scene boundary detection, and Google Gemini 3.0 Flash AI for identifying the most engaging viral moments. According to HubSpot's 2025 State of Marketing report, short-form video delivers the highest ROI of any content format, and repurposing long-form content into shorts increases total reach by up to 300%."
+      question: "What is Atom ShortsCut and how does it work?",
+      answer: "Atom ShortsCut is an AI clip generator that transforms long YouTube videos or local uploads into viral-ready short clips in 9:16 vertical format. It uses a multi-step AI pipeline: faster-whisper for transcription with word-level timestamps, PySceneDetect for scene boundary detection, and Google Gemini 3.0 Flash AI for identifying the most engaging viral moments."}
     },
     {
-      question: "Is OpenShorts really free? What's the catch?",
-      answer: "OpenShorts is 100% free and open source. You self-host it using Docker on your own machine or server. It uses three external APIs — all with free tiers. Google Gemini API (required) powers the AI analysis, viral moment detection, and thumbnail generation — its free tier includes 1,500 requests per day. ElevenLabs API (optional) enables AI voice dubbing in 30+ languages — free tier included. Upload-Post API (optional) is a social media API that allows direct publishing to YouTube, TikTok, and Instagram — 10 free uploads/month, no credit card required. There are no watermarks, no usage limits, no monthly subscriptions, and no per-video fees — unlike Opus Clip ($15-228/month) or Kapwing ($24-79/month)."
+      question: "How much does Atom ShortsCut cost?",
+      answer: "Atom ShortsCut is self-hosted using Docker on your own machine or server. The core AI features powered by Google Gemini are built-in and ready to use. Optional external APIs like ElevenLabs (voice dubbing) and Upload-Post (social publishing) have their own free tiers. There are no watermarks, no usage limits, and no per-video fees."
     },
     {
-      question: "How does OpenShorts compare to Opus Clip?",
-      answer: "OpenShorts is a free, self-hosted alternative to Opus Clip. Both offer AI viral moment detection and smart vertical cropping. Key differences: OpenShorts is completely free vs Opus Clip's $15-228/month pricing. OpenShorts runs on your infrastructure (full data privacy) vs cloud-only. OpenShorts uses Google Gemini 3.0 Flash for AI analysis vs Opus Clip's proprietary model. OpenShorts adds AI voice dubbing in 30+ languages, AI-generated video effects, and hook text overlays. The trade-off is that OpenShorts requires Docker self-hosting, while Opus Clip is a ready-to-use cloud service."
+      question: "How does Atom ShortsCut compare to Opus Clip?",
+      answer: "Both offer AI viral moment detection and smart vertical cropping. Atom ShortsCut runs on your infrastructure for full data privacy, uses Google Gemini 3.0 Flash for AI analysis, and adds AI voice dubbing in 30+ languages, AI-generated video effects, and hook text overlays. The trade-off is that Atom ShortsCut requires Docker self-hosting, while Opus Clip is a ready-to-use cloud service."}
     },
     {
       question: "How do I convert a YouTube video to TikTok or Reels?",
-      answer: "Simply paste the YouTube URL into OpenShorts, enter your free Gemini API key, and click Process. The AI automatically downloads the video via yt-dlp, transcribes it with faster-whisper, detects the best viral moments using Google Gemini 3.0 Flash, and crops them to 9:16 vertical format with MediaPipe face tracking. According to Wyzowl's 2025 Video Marketing Statistics report, 91% of businesses use video as a marketing tool, and repurposed short-form clips drive 2.5x more engagement than original content."
+      answer: "Simply paste the YouTube URL into Atom ShortsCut, enter your free Gemini API key, and click Process. The AI automatically downloads the video via yt-dlp, transcribes it with faster-whisper, detects the best viral moments using Google Gemini 3.0 Flash, and crops them to 9:16 vertical format with MediaPipe face tracking. According to Wyzowl's 2025 Video Marketing Statistics report, 91% of businesses use video as a marketing tool, and repurposed short-form clips drive 2.5x more engagement than original content."
     },
     {
-      question: "What AI does OpenShorts use for viral moment detection?",
-      answer: "OpenShorts uses Google Gemini 3.0 Flash, Google's latest multimodal AI model, for viral moment detection and title generation. The AI receives the full video transcript with timestamps, scene boundary data from PySceneDetect, and analyzes engagement patterns to identify the 3-15 most shareable moments. Each clip is scored based on emotional impact, hook strength, and viral potential — similar to how platforms like TikTok and YouTube rank content."
+      question: "What AI does Atom ShortsCut use for viral moment detection?",
+      answer: "Atom ShortsCut uses Google Gemini 3.0 Flash, Google's latest multimodal AI model, for viral moment detection and title generation. The AI receives the full video transcript with timestamps, scene boundary data from PySceneDetect, and analyzes engagement patterns to identify the 3-15 most shareable moments. Each clip is scored based on emotional impact, hook strength, and viral potential — similar to how platforms like TikTok and YouTube rank content."
     },
     {
-      question: "Can OpenShorts translate and dub videos into other languages?",
-      answer: "Yes. OpenShorts integrates with ElevenLabs AI dubbing to translate your video audio into over 30 languages while preserving the original speaker's voice characteristics. After dubbing, the system automatically re-transcribes the new audio and generates subtitles in the target language. This makes it easy to repurpose content for global audiences — studies show that dubbed content receives 2-3x more engagement in non-English markets."
+      question: "Can Atom ShortsCut translate and dub videos into other languages?",
+      answer: "Yes. Atom ShortsCut integrates with ElevenLabs AI dubbing to translate your video audio into over 30 languages while preserving the original speaker's voice characteristics. After dubbing, the system automatically re-transcribes the new audio and generates subtitles in the target language. This makes it easy to repurpose content for global audiences — studies show that dubbed content receives 2-3x more engagement in non-English markets."
     },
     {
       question: "How does the smart vertical cropping work?",
-      answer: "OpenShorts offers two intelligent cropping modes for converting 16:9 horizontal video to 9:16 vertical format. TRACK mode uses MediaPipe face detection with YOLOv8 as fallback to follow a single subject with 'Heavy Tripod' stabilization — the camera moves smoothly like a professional cameraman. GENERAL mode handles group shots and landscapes by creating a blurred background layout. A SpeakerTracker prevents rapid switching between subjects and handles temporary occlusions for smooth results."
+      answer: "Atom ShortsCut offers two intelligent cropping modes for converting 16:9 horizontal video to 9:16 vertical format. TRACK mode uses MediaPipe face detection with YOLOv8 as fallback to follow a single subject with 'Heavy Tripod' stabilization — the camera moves smoothly like a professional cameraman. GENERAL mode handles group shots and landscapes by creating a blurred background layout. A SpeakerTracker prevents rapid switching between subjects and handles temporary occlusions for smooth results."
     },
     {
-      question: "Can OpenShorts generate YouTube thumbnails and titles for free?",
-      answer: "Yes. OpenShorts includes a free AI YouTube thumbnail generator, a free AI YouTube title generator, and a free AI YouTube description generator — all powered by Google Gemini 3.0 Flash. Upload your video and the AI suggests 10 viral title options with an interactive refinement chat. Then it generates multiple thumbnail designs using AI image generation — upload a face photo and background image for personalized results. The studio also auto-generates YouTube descriptions with chapter timestamps and lets you publish directly to YouTube. Everything is 100% free with the Gemini free tier."
+      question: "Can Atom ShortsCut generate YouTube thumbnails and titles for free?",
+      answer: "Yes. Atom ShortsCut includes a free AI YouTube thumbnail generator, a free AI YouTube title generator, and a free AI YouTube description generator — all powered by Google Gemini 3.0 Flash. Upload your video and the AI suggests 10 viral title options with an interactive refinement chat. Then it generates multiple thumbnail designs using AI image generation — upload a face photo and background image for personalized results. The studio also auto-generates YouTube descriptions with chapter timestamps and lets you publish directly to YouTube. Everything is 100% free with the Gemini free tier."
     },
     {
-      question: "What are the system requirements to run OpenShorts?",
-      answer: "OpenShorts runs on any system with Docker installed. The recommended setup is 8GB+ RAM and a modern multi-core CPU. GPU acceleration (NVIDIA CUDA) is optional but speeds up video processing significantly. The Docker Compose setup handles all dependencies automatically — Python 3.11, FFmpeg, YOLOv8, MediaPipe, faster-whisper, and the React dashboard. It works on Linux, macOS, and Windows (via WSL2/Docker Desktop)."
+      question: "What are the system requirements to run Atom ShortsCut?",
+      answer: "Atom ShortsCut runs on any system with Docker installed. The recommended setup is 8GB+ RAM and a modern multi-core CPU. GPU acceleration (NVIDIA CUDA) is optional but speeds up video processing significantly. The Docker Compose setup handles all dependencies automatically. It works on Linux, macOS, and Windows (via WSL2/Docker Desktop)."}
     },
     {
-      question: "Is there a free open source clip generator?",
-      answer: "Yes — OpenShorts is a 100% free, open source clip generator. Unlike paid clip generators like Opus Clip ($15-228/month) or Kapwing ($24-79/month), OpenShorts lets you generate unlimited clips with no watermarks, no usage limits, and no subscription fees. It also includes a free AI YouTube thumbnail generator, free AI YouTube title generator, and free AI YouTube description generator — features that other clip generators charge extra for. You self-host it with Docker on your own machine for full privacy and control."
+      question: "Can I generate unlimited clips?",
+      answer: "Yes — Atom ShortsCut lets you generate unlimited clips with no watermarks and no usage limits. It also includes an AI YouTube thumbnail generator, AI YouTube title generator, and AI YouTube description generator. You self-host it with Docker on your own machine for full privacy and control."
     },
     {
       question: "What is the AI UGC Video Generator?",
-      answer: "OpenShorts includes an AI UGC (User Generated Content) video creator that generates marketing videos with AI actors for any product or business. You describe your product or paste a website URL — the AI writes a viral script, generates a realistic AI actor with lip-synced voiceover, adds b-roll visuals, TikTok-style subtitles, and hook text overlays. The result is a ready-to-post vertical video for TikTok, Instagram Reels, or YouTube Shorts. Two cost modes: Low Cost (~$0.65/video using Hailuo + VEED Lipsync) and Premium (~$2/video using Kling Avatar v2)."
+      answer: "Atom ShortsCut includes an AI UGC (User Generated Content) video creator that generates marketing videos with AI actors for any product or business. You describe your product or paste a website URL — the AI writes a viral script, generates a realistic AI actor with lip-synced voiceover, adds b-roll visuals, TikTok-style subtitles, and hook text overlays. The result is a ready-to-post vertical video for TikTok, Instagram Reels, or YouTube Shorts. Two cost modes: Low Cost (~$0.65/video using Hailuo + VEED Lipsync) and Premium (~$2/video using Kling Avatar v2)."
     },
     {
       question: "How much does it cost to generate an AI UGC video?",
-      answer: "OpenShorts itself is free, but the AI Shorts feature uses external APIs (fal.ai for video generation, ElevenLabs for voiceover) that charge per use. Low Cost mode costs approximately $0.65 per video (Flux image $0.05 + ElevenLabs voice $0.10 + Hailuo img2video $0.19 + VEED Lipsync $0.20 + b-roll $0.10). Premium mode costs approximately $2.00 per video using Kling Avatar v2 for higher quality. Both modes are significantly cheaper than hiring UGC creators ($50-500 per video) or using platforms like HeyGen ($24-180/month)."
+      answer: "The AI Shorts feature uses external APIs (fal.ai for video generation, ElevenLabs for voiceover) that charge per use. Low Cost mode costs approximately $0.65 per video. Premium mode costs approximately $2.00 per video using Kling Avatar v2 for higher quality. Both modes are significantly cheaper than hiring UGC creators ($50-500 per video) or using platforms like HeyGen ($24-180/month)."}
     },
     {
       question: "Can I use the AI UGC Video Generator for any type of business?",
@@ -193,8 +193,8 @@ export default function Landing({ onLaunchApp }) {
       <nav className="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-xl border-b border-white/5">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img src="/logo-openshorts.png" alt="OpenShorts logo" className="w-8 h-8" />
-            <span className="text-lg font-bold">OpenShorts</span>
+            <img src="/logo-atom-shortscut.png" alt="Atom ShortsCut logo" className="w-8 h-8" />
+            <span className="text-lg font-bold">Atom ShortsCut</span>
           </div>
           <div className="hidden md:flex items-center gap-8 text-sm text-zinc-400">
             <a href="#features" className="hover:text-white transition-colors">Features</a>
@@ -203,15 +203,7 @@ export default function Landing({ onLaunchApp }) {
             <a href="#faq" className="hover:text-white transition-colors">FAQ</a>
           </div>
           <div className="flex items-center gap-3">
-            <a
-              href="https://github.com/mutonby/openshorts"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hidden sm:flex items-center gap-2 text-sm text-zinc-400 hover:text-white transition-colors"
-            >
-              <Github size={18} />
-              <span>GitHub</span>
-            </a>
+
             <button
               onClick={onLaunchApp}
               className="bg-primary hover:bg-blue-600 text-white px-5 py-2 rounded-xl text-sm font-medium transition-all active:scale-[0.98] shadow-lg shadow-primary/20"
@@ -227,17 +219,16 @@ export default function Landing({ onLaunchApp }) {
         <div className="max-w-5xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-full px-4 py-1.5 text-sm text-primary mb-8">
             <Sparkles size={14} />
-            <span>Free & Open Source AI Clip Generator + UGC Video Creator</span>
+            <span>AI Clip Generator + UGC Video Creator</span>
           </div>
 
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold leading-tight mb-6 tracking-tight">
-            Free Open Source
-            <span className="bg-gradient-to-r from-primary via-purple-400 to-pink-500 bg-clip-text text-transparent"> Clip Generator </span>
-            & AI UGC Video Creator
+            <span className="bg-gradient-to-r from-primary via-purple-400 to-pink-500 bg-clip-text text-transparent">AI Clip Generator</span>
+            <br />& UGC Video Creator
           </h1>
 
           <p className="hero-description text-lg md:text-xl text-zinc-400 max-w-3xl mx-auto mb-10 leading-relaxed">
-            Three tools in one. <strong className="text-white">Clip Generator:</strong> turn long YouTube videos into viral shorts with AI moment detection, smart 9:16 crop, and auto subtitles. <strong className="text-white">AI Shorts:</strong> generate UGC marketing videos with AI actors and lip-sync for any business. <strong className="text-white">YouTube Studio:</strong> free AI thumbnail generator, 10 viral title suggestions with refinement chat, and auto descriptions with chapters. Self-hosted, open source, no limits.
+            Three tools in one. <strong className="text-white">Clip Generator:</strong> turn long YouTube videos into viral shorts with AI moment detection, smart 9:16 crop, and auto subtitles. <strong className="text-white">AI Shorts:</strong> generate UGC marketing videos with AI actors and lip-sync for any business. <strong className="text-white">YouTube Studio:</strong> AI thumbnail generator, 10 viral title suggestions with refinement chat, and auto descriptions with chapters.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
@@ -248,15 +239,7 @@ export default function Landing({ onLaunchApp }) {
               Get Started Free
               <ArrowRight size={20} />
             </button>
-            <a
-              href="https://github.com/mutonby/openshorts"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 bg-white/5 border border-white/10 text-white px-8 py-3.5 rounded-xl font-medium transition-all hover:bg-white/10 text-lg"
-            >
-              <Github size={20} />
-              View on GitHub
-            </a>
+
           </div>
 
           {/* Platform Icons */}
@@ -285,7 +268,7 @@ export default function Landing({ onLaunchApp }) {
         <div className="max-w-5xl mx-auto px-6 py-10 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
           <div>
             <div className="text-3xl font-bold text-white">100%</div>
-            <div className="text-sm text-zinc-400 mt-1">Free & Open Source</div>
+            <div className="text-sm text-zinc-400 mt-1">AI-Powered</div>
           </div>
           <div>
             <div className="text-3xl font-bold text-white">3</div>
@@ -307,7 +290,7 @@ export default function Landing({ onLaunchApp }) {
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-14">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">3 Free Tools in 1 Platform</h2>
-            <p className="text-zinc-400 max-w-2xl mx-auto">Everything you need to create, optimize, and publish short-form video content — all free and open source.</p>
+            <p className="text-zinc-400 max-w-2xl mx-auto">Everything you need to create, optimize, and publish short-form video content.</p>
           </div>
           <div className="grid md:grid-cols-3 gap-6">
             <div className="bg-surface/50 border border-primary/20 rounded-2xl p-8 relative overflow-hidden">
@@ -367,7 +350,7 @@ export default function Landing({ onLaunchApp }) {
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-14">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">All APIs Have Free Tiers</h2>
-            <p className="text-zinc-400 max-w-2xl mx-auto">OpenShorts uses three external APIs — all with generous free tiers. Only Gemini is required. Your API keys are encrypted client-side and never stored on the server.</p>
+            <p className="text-zinc-400 max-w-2xl mx-auto">Atom ShortsCut uses external APIs with generous free tiers. Gemini is built-in and ready to use. Optional keys for ElevenLabs and Upload-Post are encrypted client-side.</p>
           </div>
           <div className="grid md:grid-cols-3 gap-5">
             <div className="bg-surface/50 border border-white/10 rounded-2xl p-6 relative">
@@ -377,7 +360,7 @@ export default function Landing({ onLaunchApp }) {
               </div>
               <h3 className="text-lg font-semibold text-white mb-1">Google Gemini API</h3>
               <span className="inline-block text-xs text-green-400 bg-green-500/10 border border-green-500/20 px-2 py-0.5 rounded-full mb-3">Free tier: 1,500 req/day</span>
-              <p className="text-zinc-400 text-sm leading-relaxed">Powers all AI features: viral moment detection, title generation, video effects, YouTube thumbnail creation, and description writing. The core engine of OpenShorts.</p>
+              <p className="text-zinc-400 text-sm leading-relaxed">Powers all AI features: viral moment detection, title generation, video effects, YouTube thumbnail creation, and description writing. Built-in and ready to use.</p>
             </div>
             <div className="bg-surface/50 border border-white/10 rounded-2xl p-6 relative">
               <div className="absolute top-4 right-4 bg-zinc-700/50 text-zinc-400 text-[10px] font-bold px-2 py-0.5 rounded-full border border-zinc-600/30">OPTIONAL</div>
@@ -395,7 +378,7 @@ export default function Landing({ onLaunchApp }) {
               </div>
               <h3 className="text-lg font-semibold text-white mb-1">Upload-Post API</h3>
               <span className="inline-block text-xs text-green-400 bg-green-500/10 border border-green-500/20 px-2 py-0.5 rounded-full mb-3">Free tier included</span>
-              <p className="text-zinc-400 text-sm leading-relaxed">Enables direct publishing to YouTube, TikTok, and Instagram Reels from the dashboard. <a href="https://www.upload-post.com" target="_blank" rel="noopener noreferrer" className="text-pink-400 hover:text-pink-300 underline">Social media API</a> that lets you post your clips and thumbnails without leaving OpenShorts.</p>
+              <p className="text-zinc-400 text-sm leading-relaxed">Enables direct publishing to YouTube, TikTok, and Instagram Reels from the dashboard. <a href="https://www.upload-post.com" target="_blank" rel="noopener noreferrer" className="text-pink-400 hover:text-pink-300 underline">Social media API</a> that lets you post your clips and thumbnails without leaving Atom ShortsCut.</p>
             </div>
           </div>
           <div className="grid md:grid-cols-2 gap-5 mt-5">
@@ -441,7 +424,7 @@ export default function Landing({ onLaunchApp }) {
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-14">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">Built with Proven Technology</h2>
-            <p className="text-zinc-400 max-w-2xl mx-auto">OpenShorts combines industry-leading AI models and open source tools into a production-ready video processing pipeline.</p>
+            <p className="text-zinc-400 max-w-2xl mx-auto">Atom ShortsCut combines industry-leading AI models and tools into a production-ready video processing pipeline.</p>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
@@ -469,7 +452,7 @@ export default function Landing({ onLaunchApp }) {
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-14">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">Free Clip Generator vs Paid Alternatives</h2>
-            <p className="text-zinc-400 max-w-2xl mx-auto">Why pay $15-228/month for an AI clip generator when you can self-host the same capabilities for free? OpenShorts includes a free YouTube thumbnail generator, AI title suggestions, and auto descriptions — features that paid tools charge extra for.</p>
+            <p className="text-zinc-400 max-w-2xl mx-auto">Why pay $15-228/month for an AI clip generator when you can self-host the same capabilities for free? Atom ShortsCut includes a free YouTube thumbnail generator, AI title suggestions, and auto descriptions — features that paid tools charge extra for.</p>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -477,7 +460,7 @@ export default function Landing({ onLaunchApp }) {
                 <tr className="border-b border-white/10">
                   <th className="py-3 px-4 text-left text-sm text-zinc-400 font-medium">Feature</th>
                   <th className="py-3 px-4 text-center text-sm font-medium">
-                    <span className="text-primary">OpenShorts</span>
+                    <span className="text-primary">Atom ShortsCut</span>
                   </th>
                   <th className="py-3 px-4 text-center text-sm text-zinc-400 font-medium">Opus Clip</th>
                   <th className="py-3 px-4 text-center text-sm text-zinc-400 font-medium">Kapwing</th>
@@ -493,7 +476,7 @@ export default function Landing({ onLaunchApp }) {
                 <ComparisonRow feature="Hook Text Overlays" openshorts={checkIcon} opusclip={checkIcon} kapwing={checkIcon} />
                 <ComparisonRow feature="Self-Hosted / Privacy" openshorts={checkIcon} opusclip={<span className="text-zinc-500 text-sm">Cloud only</span>} kapwing={<span className="text-zinc-500 text-sm">Cloud only</span>} />
                 <ComparisonRow feature="No Watermark" openshorts={checkIcon} opusclip={<span className="text-zinc-500 text-sm">Free tier only</span>} kapwing={<span className="text-zinc-500 text-sm">Paid</span>} />
-                <ComparisonRow feature="Open Source" openshorts={checkIcon} opusclip={<span className="text-zinc-500 text-sm">No</span>} kapwing={<span className="text-zinc-500 text-sm">No</span>} />
+
                 <ComparisonRow feature="AI YouTube Thumbnail Generator" openshorts={checkIcon} opusclip={<span className="text-zinc-500 text-sm">No</span>} kapwing={<span className="text-zinc-500 text-sm">Paid</span>} />
                 <ComparisonRow feature="AI Title & Description Generator" openshorts={checkIcon} opusclip={<span className="text-zinc-500 text-sm">Limited</span>} kapwing={<span className="text-zinc-500 text-sm">Paid</span>} />
                 <ComparisonRow feature="AI UGC Video Generator" openshorts={checkIcon} opusclip={<span className="text-zinc-500 text-sm">No</span>} kapwing={<span className="text-zinc-500 text-sm">No</span>} />
@@ -509,8 +492,8 @@ export default function Landing({ onLaunchApp }) {
       <section className="py-20 px-6">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-14">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Who Uses OpenShorts?</h2>
-            <p className="text-zinc-400 max-w-2xl mx-auto">Content creators, marketers, and agencies use OpenShorts to scale their short-form video production. According to HubSpot's 2025 report, short-form video is the #1 content format with the highest ROI.</p>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Who Uses Atom ShortsCut?</h2>
+            <p className="text-zinc-400 max-w-2xl mx-auto">Content creators, marketers, and agencies use Atom ShortsCut to scale their short-form video production.</p>
           </div>
           <div className="grid md:grid-cols-3 gap-5">
             {[
@@ -550,7 +533,7 @@ export default function Landing({ onLaunchApp }) {
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-14">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">Frequently Asked Questions</h2>
-            <p className="text-zinc-400">Everything you need to know about OpenShorts, from setup to features.</p>
+            <p className="text-zinc-400">Everything you need to know about Atom ShortsCut, from setup to features.</p>
           </div>
           <div className="space-y-3">
             {faqs.map((faq, i) => (
@@ -569,25 +552,16 @@ export default function Landing({ onLaunchApp }) {
       {/* CTA Section */}
       <section className="py-20 px-6">
         <div className="max-w-3xl mx-auto text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">Start Creating Viral Videos for Free</h2>
-          <p className="text-zinc-400 mb-8 max-w-xl mx-auto">No sign-up, no credit card, no watermarks. Generate viral clips from long videos or create AI UGC marketing videos with AI actors for any business. Self-host with Docker.</p>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">Start Creating Viral Videos</h2>
+          <p className="text-zinc-400 mb-8 max-w-xl mx-auto">Generate viral clips from long videos or create AI UGC marketing videos with AI actors for any business.</p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <button
               onClick={onLaunchApp}
               className="flex items-center gap-2 bg-primary hover:bg-blue-600 text-white px-8 py-3.5 rounded-xl font-medium transition-all active:scale-[0.98] shadow-lg shadow-primary/20 text-lg"
             >
-              Launch OpenShorts
+              Launch Atom ShortsCut
               <ArrowRight size={20} />
             </button>
-            <a
-              href="https://github.com/mutonby/openshorts"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 text-zinc-400 hover:text-white transition-colors text-sm"
-            >
-              <Github size={18} />
-              Star on GitHub
-            </a>
           </div>
         </div>
       </section>
@@ -596,17 +570,16 @@ export default function Landing({ onLaunchApp }) {
       <footer className="border-t border-white/5 py-10 px-6">
         <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <img src="/logo-openshorts.png" alt="OpenShorts" className="w-6 h-6" />
-            <span className="text-sm text-zinc-400">OpenShorts — Free Open Source Clip Generator & AI UGC Video Creator</span>
+            <img src="/logo-atom-shortscut.png" alt="Atom ShortsCut" className="w-6 h-6" />
+            <span className="text-sm text-zinc-400">Atom ShortsCut — AI Clip Generator & UGC Video Creator</span>
           </div>
           <div className="flex items-center gap-6 text-sm text-zinc-500">
-            <a href="https://github.com/mutonby/openshorts" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">GitHub</a>
             <a href="#features" className="hover:text-white transition-colors">Features</a>
             <a href="#faq" className="hover:text-white transition-colors">FAQ</a>
           </div>
         </div>
         <div className="max-w-5xl mx-auto mt-6 pt-4 border-t border-white/5 text-center">
-          <span className="text-xs text-zinc-600">Made with ❤️ by <a href="https://www.upload-post.com" target="_blank" rel="noopener noreferrer" className="text-zinc-500 hover:text-white transition-colors">Upload-Post</a></span>
+          <span className="text-xs text-zinc-600">Made with ❤️ by Atom ShortsCut</span>
         </div>
       </footer>
     </div>

@@ -262,10 +262,23 @@ async def run_job(job_id, job_data):
                              clip_filename = f"{base_name}_clip_{i+1}.mp4"
                              clip_path = os.path.join(output_dir, clip_filename)
                              if os.path.exists(clip_path) and os.path.getsize(clip_path) > 0:
-                                 # Checking if file is growing? For now assume if it exists and main.py moves it there, it's done.
-                                 # main.py writes to temp_... then moves to final name. So presence means ready!
-                                 clip['video_url'] = f"/videos/{job_id}/{clip_filename}"
-                                 ready_clips.append(clip)
+                                  # Checking if file is growing? For now assume if it exists and main.py moves it there, it's done.
+                                  # main.py writes to temp_... then moves to final name. So presence means ready!
+                                  clip['video_url'] = f"/videos/{job_id}/{clip_filename}"
+                                  ready_clips.append(clip)
+
+                        # Check for promo reel output (single stitched file)
+                        if not ready_clips and data.get('promo_reel'):
+                            promo_file = f"{base_name}_promo.mp4"
+                            promo_path = os.path.join(output_dir, promo_file)
+                            if os.path.exists(promo_path) and os.path.getsize(promo_path) > 0:
+                                ready_clips.append({
+                                    'video_url': f"/videos/{job_id}/{promo_file}",
+                                    'promo_reel': True,
+                                    'start': 0,
+                                    'end': data.get('total_duration', 0),
+                                    'video_title_for_youtube_short': base_name,
+                                })
                         
                         if ready_clips:
                              jobs[job_id]['result'] = {'clips': ready_clips, 'cost_analysis': cost_analysis}
@@ -299,9 +312,23 @@ async def run_job(job_id, job_data):
                 clips = data.get('shorts', [])
                 cost_analysis = data.get('cost_analysis')
 
-                for i, clip in enumerate(clips):
-                     clip_filename = f"{base_name}_clip_{i+1}.mp4"
-                     clip['video_url'] = f"/videos/{job_id}/{clip_filename}"
+                if data.get('promo_reel'):
+                    promo_file = f"{base_name}_promo.mp4"
+                    promo_path = os.path.join(output_dir, promo_file)
+                    if os.path.exists(promo_path) and os.path.getsize(promo_path) > 0:
+                        clips = [{
+                            'video_url': f"/videos/{job_id}/{promo_file}",
+                            'promo_reel': True,
+                            'start': 0,
+                            'end': data.get('total_duration', 0),
+                            'video_title_for_youtube_short': base_name,
+                        }]
+                    else:
+                        clips = []
+                else:
+                    for i, clip in enumerate(clips):
+                        clip_filename = f"{base_name}_clip_{i+1}.mp4"
+                        clip['video_url'] = f"/videos/{job_id}/{clip_filename}"
                 
                 jobs[job_id]['result'] = {'clips': clips, 'cost_analysis': cost_analysis}
             else:
@@ -377,6 +404,60 @@ async def process_endpoint(
     
     await job_queue.put(job_id)
     
+    return {"job_id": job_id, "status": "queued"}
+
+@app.post("/api/promo")
+async def promo_endpoint(
+    request: Request,
+    file: UploadFile = File(...),
+    duration: int = Form(90),
+    x_gemini_key: Optional[str] = Header(None, alias="X-Gemini-Key"),
+):
+    """Generate a promo reel from a local video: horizontal cuts stitched into one file."""
+    api_key = x_gemini_key or request.headers.get("X-Gemini-Key")
+    if not api_key:
+        raise HTTPException(status_code=400, detail="Missing X-Gemini-Key header")
+
+    job_id = str(uuid.uuid4())
+    job_output_dir = os.path.join(OUTPUT_DIR, job_id)
+    os.makedirs(job_output_dir, exist_ok=True)
+
+    # Save uploaded file with size limit
+    input_path = os.path.join(UPLOAD_DIR, f"promo_{job_id}_{file.filename}")
+
+    size = 0
+    limit_bytes = MAX_FILE_SIZE_MB * 1024 * 1024
+    with open(input_path, "wb") as buffer:
+        while content := await file.read(1024 * 1024):
+            size += len(content)
+            if size > limit_bytes:
+                os.remove(input_path)
+                shutil.rmtree(job_output_dir)
+                raise HTTPException(status_code=413, detail=f"File too large. Max size {MAX_FILE_SIZE_MB}MB")
+            buffer.write(content)
+
+    promo_duration = max(min(duration, 120), 15)
+
+    cmd = [
+        "python", "-u", "main.py",
+        "-i", input_path,
+        "-o", job_output_dir,
+        "--promo",
+        "--promo-duration", str(promo_duration),
+    ]
+    env = os.environ.copy()
+    env["GEMINI_API_KEY"] = api_key
+
+    jobs[job_id] = {
+        'status': 'queued',
+        'logs': [f"Promo job {job_id} queued. Duration target: {promo_duration}s"],
+        'cmd': cmd,
+        'env': env,
+        'output_dir': job_output_dir,
+    }
+
+    await job_queue.put(job_id)
+
     return {"job_id": job_id, "status": "queued"}
 
 @app.get("/api/status/{job_id}")

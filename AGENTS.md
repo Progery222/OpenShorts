@@ -1,4 +1,4 @@
-# AGENTS.md — OpenShorts
+# AGENTS.md — Atom ShortsCut
 
 Repo-specific guidance for AI agents working in this codebase.
 
@@ -116,7 +116,7 @@ Entered via **Settings** tab in the UI. Never stored server-side.
 
 | Key | Required for |
 |-----|-------------|
-| `GEMINI_API_KEY` | All AI features (clip detection, titles, thumbnails, effects) |
+| `GEMINI_API_KEY` | Hardcoded in `dashboard/src/App.jsx`. All AI features work out of the box. |
 | `FAL_KEY` | AI Shorts (actor generation, talking head, lip-sync) |
 | `ELEVENLABS_API_KEY` | Voice dubbing / voiceover |
 | `UPLOAD_POST_API_KEY` | Social auto-publishing (optional) |
@@ -132,8 +132,7 @@ Encryption uses XOR + Base64 with `VITE_ENCRYPTION_KEY` (build-time env, default
 Verification is manual:
 1. Start the stack with Docker
 2. Open `http://localhost:5175/#app`
-3. Enter a Gemini API key in **Settings**
-4. Submit a YouTube URL or upload in **Clip Generator**
+3. Submit a YouTube URL or upload in **Clip Generator**
 5. Poll `/api/status/{job_id}` or watch the UI progress log
 
 ---
@@ -210,7 +209,7 @@ Do not treat this as a standard `backend/` + `frontend/` repo. The backend code 
 ## Common Gotchas
 
 1. **Port conflicts**: If `8000`, `5175`, or `3100` are taken, edit `docker-compose.yml` host ports (e.g., `8001:8000`). The README default is `5175:5173` but some clones use `5176:5173`.
-2. **Missing API key = silent failures**: Most features require `GEMINI_API_KEY`. The UI shows "API Key Missing" badge but backend calls will fail without it.
+2. **Gemini key is hardcoded**: No API key setup needed. The key is baked into `dashboard/src/App.jsx`.
 3. **No hot reload for backend in Docker?** The backend `Dockerfile` does not use a watch mode; `docker compose up --build` rebuilds on start. For live editing, mount the root as a volume (already done in `docker-compose.yml`) and restart the container, or run `uvicorn` locally.
 4. **Frontend hash routing**: The dashboard uses `window.location.hash === '#app'` to toggle between landing page and app. Direct links to `/app` may 404; use `/#app`.
 5. **FFmpeg is required**: The backend relies heavily on FFmpeg for all video operations. It is installed in the Docker image; local dev requires system FFmpeg.
@@ -221,5 +220,6 @@ Do not treat this as a standard `backend/` + `frontend/` repo. The backend code 
 ## Existing Instruction Files
 
 - `CLAUDE.md` — Claude Code guidance (similar to this file, less Docker-focused)
+- Global instructions at `C:\Users\Mobile Farm\.claude\CLAUDE.md` — Russian language, conventional commits, ruff lint/format
 
 No `.cursorrules`, `.cursor/rules/`, `.github/copilot-instructions.md`, or `opencode.json` found.

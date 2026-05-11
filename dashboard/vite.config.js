@@ -6,8 +6,8 @@ export default defineConfig({
   plugins: [react()],
   server: {
     allowedHosts: [
-      'openshorts.app',
-      'www.openshorts.app'
+      'atomshortscut.com',
+      'www.atomshortscut.com'
     ],
     proxy: {
       '/api': {

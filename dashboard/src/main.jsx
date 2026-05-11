@@ -6,7 +6,7 @@ import Landing from './Landing.jsx'
 
 function Root() {
   const [showApp, setShowApp] = useState(() => {
-    return window.location.hash === '#app' || localStorage.getItem('openshorts_skip_landing') === '1';
+    return window.location.hash === '#app' || localStorage.getItem('atomshortscut_skip_landing') === '1';
   });
 
   useEffect(() => {
@@ -18,7 +18,7 @@ function Root() {
   }, []);
 
   const handleLaunchApp = () => {
-    localStorage.setItem('openshorts_skip_landing', '1');
+    localStorage.setItem('atomshortscut_skip_landing', '1');
     window.location.hash = '#app';
     setShowApp(true);
   };

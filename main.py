@@ -5,7 +5,7 @@ import subprocess
 import argparse
 import re
 import sys
-from scenedetect import VideoManager, SceneManager
+from scenedetect import open_video, SceneManager
 from scenedetect.detectors import ContentDetector
 from ultralytics import YOLO
 import torch
@@ -422,15 +422,12 @@ def analyze_scenes_strategy(video_path, scenes):
     return strategies
 
 def detect_scenes(video_path):
-    video_manager = VideoManager([video_path])
+    video = open_video(video_path)
     scene_manager = SceneManager()
     scene_manager.add_detector(ContentDetector())
-    video_manager.set_downscale_factor()
-    video_manager.start()
-    scene_manager.detect_scenes(frame_source=video_manager)
+    scene_manager.detect_scenes(video)
     scene_list = scene_manager.get_scene_list()
-    fps = video_manager.get_framerate()
-    video_manager.release()
+    fps = video.frame_rate
     return scene_list, fps
 
 def get_video_resolution(video_path):
@@ -807,6 +804,44 @@ def process_video_to_vertical(input_video, final_output_video):
     
     return True
 
+def concat_promo_clips(clip_paths, output_path):
+    """
+    Concatenates multiple video clips into a single promo reel using FFmpeg concat demuxer.
+    All clips must share the same codec, resolution, and framerate (guaranteed when cut
+    from the same source with identical ffmpeg settings).
+    """
+    if len(clip_paths) == 1:
+        import shutil
+        shutil.copy(clip_paths[0], output_path)
+        print(f"   ✅ Single-clip promo reel saved: {output_path}")
+        return True
+
+    concat_list_path = output_path + '.concat.txt'
+    with open(concat_list_path, 'w') as f:
+        for p in clip_paths:
+            f.write(f"file '{os.path.abspath(p)}'\n")
+
+    concat_cmd = [
+        'ffmpeg', '-y',
+        '-f', 'concat', '-safe', '0',
+        '-i', concat_list_path,
+        '-c', 'copy',
+        output_path,
+    ]
+
+    result = subprocess.run(concat_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+    if os.path.exists(concat_list_path):
+        os.remove(concat_list_path)
+
+    if result.returncode != 0:
+        print(f"   ❌ FFmpeg concat failed: {result.stderr.decode()[-300:]}")
+        return False
+
+    print(f"   ✅ Promo reel saved ({len(clip_paths)} clips): {output_path}")
+    return True
+
+
 def transcribe_video(video_path):
     print("🎙️  Transcribing video with Faster-Whisper (CPU Optimized)...")
     from faster_whisper import WhisperModel
@@ -1081,6 +1116,8 @@ if __name__ == '__main__':
     parser.add_argument('-o', '--output', type=str, help="Output directory or file (if processing whole video).")
     parser.add_argument('--keep-original', action='store_true', help="Keep the downloaded YouTube video.")
     parser.add_argument('--skip-analysis', action='store_true', help="Skip AI analysis and convert the whole video.")
+    parser.add_argument('--promo', action='store_true', help="Promo reel mode: cut clips horizontally and stitch into one video.")
+    parser.add_argument('--promo-duration', type=int, default=90, help="Target promo duration in seconds (default: 90, max: 120).")
     
     args = parser.parse_args()
 
@@ -1176,40 +1213,100 @@ if __name__ == '__main__':
                 json.dump(clips_data, f, indent=2)
             print(f"   Saved metadata to {metadata_file}")
 
-            # 5. Process each clip
-            for i, clip in enumerate(clips_data['shorts']):
-                start = clip['start']
-                end = clip['end']
-                print(f"\n🎬 Processing Clip {i+1}: {start}s - {end}s")
-                print(f"   Title: {clip.get('video_title_for_youtube_short', 'No Title')}")
-                
-                # Cut clip
-                clip_filename = f"{video_title}_clip_{i+1}.mp4"
-                clip_temp_path = os.path.join(output_dir, f"temp_{clip_filename}")
-                clip_final_path = os.path.join(output_dir, clip_filename)
-                
-                # ffmpeg cut
-                # Using re-encoding for precision as requested by strict seconds
-                cut_command = [
-                    'ffmpeg', '-y', 
-                    '-ss', str(start), 
-                    '-to', str(end), 
-                    '-i', input_video,
-                    '-c:v', 'libx264', '-crf', '18', '-preset', 'fast',
-                    '-c:a', 'aac',
-                    clip_temp_path
-                ]
-                subprocess.run(cut_command, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
-                
-                # Process vertical
-                success = process_video_to_vertical(clip_temp_path, clip_final_path)
-                
+            # 5. Process clips
+            if args.promo:
+                # --- Promo Reel Mode ---
+                promo_duration = min(max(args.promo_duration, 15), 120)
+                selected_clips = []
+                total_dur = 0.0
+                for clip in clips_data['shorts']:
+                    dur = clip['end'] - clip['start']
+                    if total_dur + dur > promo_duration and selected_clips:
+                        break
+                    selected_clips.append(clip)
+                    total_dur += dur
+
+                print(f"\n🎬 Promo reel: {len(selected_clips)} clips, ~{total_dur:.0f}s / {promo_duration}s target")
+
+                clip_paths = []
+                for i, clip in enumerate(selected_clips):
+                    start = clip['start']
+                    end = clip['end']
+                    dur = end - start
+                    clip_filename = f"promo_part_{i+1}.mp4"
+                    clip_path = os.path.join(output_dir, clip_filename)
+
+                    print(f"   Cutting clip {i+1}: {start:.1f}s → {end:.1f}s ({dur:.1f}s)")
+                    cut_command = [
+                        'ffmpeg', '-y',
+                        '-ss', str(start),
+                        '-to', str(end),
+                        '-i', input_video,
+                        '-c:v', 'libx264', '-crf', '18', '-preset', 'fast',
+                        '-c:a', 'aac',
+                        clip_path,
+                    ]
+                    subprocess.run(cut_command, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+                    clip_paths.append(clip_path)
+
+                promo_filename = f"{video_title}_promo.mp4"
+                promo_output = os.path.join(output_dir, promo_filename)
+                success = concat_promo_clips(clip_paths, promo_output)
+
+                # Clean up temp parts
+                for p in clip_paths:
+                    if os.path.exists(p):
+                        os.remove(p)
+
                 if success:
-                    print(f"   ✅ Clip {i+1} ready: {clip_final_path}")
-                
-                # Clean up temp cut
-                if os.path.exists(clip_temp_path):
-                    os.remove(clip_temp_path)
+                    print(f"✅ Promo reel ready: {promo_output}")
+                    # Write metadata so the job watcher finds the promo
+                    promo_meta = {
+                        'shorts': selected_clips,
+                        'transcript': transcript,
+                        'promo_reel': True,
+                        'promo_duration': promo_duration,
+                        'total_duration': total_dur,
+                    }
+                    # Overwrite metadata with promo-specific info
+                    with open(metadata_file, 'w') as f:
+                        json.dump(promo_meta, f, indent=2)
+
+            else:
+                # --- Normal Mode: vertical reframe per clip ---
+                for i, clip in enumerate(clips_data['shorts']):
+                    start = clip['start']
+                    end = clip['end']
+                    print(f"\n🎬 Processing Clip {i+1}: {start}s - {end}s")
+                    print(f"   Title: {clip.get('video_title_for_youtube_short', 'No Title')}")
+                    
+                    # Cut clip
+                    clip_filename = f"{video_title}_clip_{i+1}.mp4"
+                    clip_temp_path = os.path.join(output_dir, f"temp_{clip_filename}")
+                    clip_final_path = os.path.join(output_dir, clip_filename)
+                    
+                    # ffmpeg cut
+                    # Using re-encoding for precision as requested by strict seconds
+                    cut_command = [
+                        'ffmpeg', '-y', 
+                        '-ss', str(start), 
+                        '-to', str(end), 
+                        '-i', input_video,
+                        '-c:v', 'libx264', '-crf', '18', '-preset', 'fast',
+                        '-c:a', 'aac',
+                        clip_temp_path
+                    ]
+                    subprocess.run(cut_command, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+                    
+                    # Process vertical
+                    success = process_video_to_vertical(clip_temp_path, clip_final_path)
+                    
+                    if success:
+                        print(f"   ✅ Clip {i+1} ready: {clip_final_path}")
+                    
+                    # Clean up temp cut
+                    if os.path.exists(clip_temp_path):
+                        os.remove(clip_temp_path)
 
     # Clean up original if requested
     if args.url and not args.keep_original and os.path.exists(input_video):
